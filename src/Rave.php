@@ -17,7 +17,6 @@ use Illuminate\Http\Request as LaravelRequest;
  **/
 class Rave
 {
-
     protected $publicKey;
     protected $secretKey;
     protected $paymentMethod = 'both';
@@ -59,7 +58,7 @@ class Rave
      * @param Request $unirestRequest
      * @param Body $body
      */
-    function __construct(LaravelRequest $request, Request $unirestRequest, Body $body)
+    public function __construct(LaravelRequest $request, Request $unirestRequest, Body $body)
     {
         $this->request = $request;
         $this->body = $body;
@@ -76,6 +75,7 @@ class Rave
         $this->transactionPrefix = $prefix . '_';
         $this->overrideTransactionReference = $overrideRefWithPrefix;
 
+        $this->hosted_payment = 0;
 
         Log::notice('Generating Reference Number....');
         if ($this->overrideTransactionReference) {
@@ -124,6 +124,10 @@ class Rave
             $this->txref = $this->request->ref;
         }
 
+        if ($this->request->hosted_payment) {
+            $this->hosted_payment = $this->request->hosted_payment;
+        }
+
         Log::notice('Generating Checksum....');
         $options = array(
             "PBFPubKey" => $this->publicKey,
@@ -140,7 +144,8 @@ class Rave
             "custom_title" => $this->customTitle,
             "customer_phone" => $this->request->phonenumber,
             "redirect_url" => $redirectURL,
-            "pay_button_text" => $this->request->pay_button_text
+            "pay_button_text" => $this->request->pay_button_text,
+            "hosted_payment" => $this->hosted_payment
         );
 
         if (!empty($this->request->paymentplan)) {
@@ -224,7 +229,6 @@ class Rave
             return $resp;
         }
         return $data;
-
     }
 
     /********************************************************************
@@ -622,7 +626,6 @@ class Rave
      * */
     public function createPaymentPlan()
     {
-
         $data = array(
             'amount' => $this->request->amount,
             'interval' => $this->request->interval,
@@ -654,7 +657,6 @@ class Rave
      * */
     public function editPaymentPlan($id)
     {
-
         $data = array(
             'name' => $this->request->name,
             'status' => $this->request->status,
@@ -684,7 +686,6 @@ class Rave
      * */
     public function cancelPaymentPlan($id)
     {
-
         $data = array(
             'seckey' => $this->secretKey
         );
@@ -807,7 +808,6 @@ class Rave
      * */
     public function cancelSubscription($id)
     {
-
         $data = array(
             'seckey' => $this->secretKey
         );
@@ -835,7 +835,6 @@ class Rave
      * */
     public function activateSubscription($id)
     {
-
         $data = array(
             'seckey' => $this->secretKey
         );
@@ -1001,7 +1000,6 @@ class Rave
         }
 
         return $response->body;
-
     }
 
     /**
@@ -1280,7 +1278,6 @@ class Rave
         $response = $this->unirestRequest->get($url, $headers);
 
         return $response;
-
     }
 
     /********************************************************************
